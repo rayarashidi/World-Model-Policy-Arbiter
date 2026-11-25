@@ -25,6 +25,7 @@ from utils.datasets import Dataset
 from utils.flax_utils import save_agent
 from utils.log_utils import CsvLogger, get_exp_name, get_flag_dict
 
+from evaluation.diagnostics import spearman  # noqa: E402
 from world_model.model import EnsembleWorldModel, get_config  # noqa: E402
 from world_model.seq_dataset import WMSequenceDataset, compute_norm_stats  # noqa: E402
 
@@ -148,9 +149,7 @@ def main(_):
                     lg.append(np.asarray(model.value_score(obs, goals)).mean(axis=0))
                     tg.append(vb['reach_targets'])
                 tg, lg = np.concatenate(tg), np.concatenate(lg)
-                r_t = np.argsort(np.argsort(tg)).astype(np.float64)
-                r_l = np.argsort(np.argsort(lg)).astype(np.float64)
-                metrics['validation/value_rank_corr'] = float(np.corrcoef(r_t, r_l)[0, 1])
+                metrics['validation/value_rank_corr'] = spearman(tg, lg)
             wandb.log(metrics, step=i)
             train_logger.log(metrics, step=i)
 
